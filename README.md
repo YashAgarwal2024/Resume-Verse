@@ -1,6 +1,7 @@
 # [ResumeVerse - Digital Resume Explorer](https://resume-verse-five.vercel.app/)
 
-![ResumeVerse Banner](assets/image.png)
+<img width="1856" height="1014" alt="image" src="https://github.com/user-attachments/assets/52576135-ce58-473c-a47c-61a384b0bf72" />
+
 
 **ResumeVerse** is an interactive, physics-powered digital resume platform that transforms traditional resume browsing into an immersive, gamified experience. Explore resumes through natural language commands, unleash spectacular visual effects, and discover talent in ways you've never imagined!
 
