@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeVerse - Digital Resume Explorer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;600;700&family=Poppins:wght@300;400;600;700&family=Raleway:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Ubuntu:wght@300;400;500;700&family=PT+Sans:wght@400;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen relative">
+    <!-- Focus Overlay -->
+    <div id="focus-overlay" class="focus-overlay"></div>
+
+    <!-- Animated Background -->
+    <div class="stars" id="stars-container"></div>
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+    <div class="floating-orb orb-3"></div>
+
+    <!-- Physics Canvas -->
+    <canvas id="physics-canvas" class="physics-canvas"></canvas>
+
+    <!-- Water Effect -->
+    <div id="water-effect" class="water-effect hidden"></div>
+
+    <!-- Tornado Effect -->
+    <div id="tornado-effect" class="tornado-effect hidden"></div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 p-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-4 animate-pulse">
+                ResumeVerse
+            </h1>
+            <p class="text-xl text-gray-300 font-light tracking-wide">Digital Resume Explorer</p>
+            <div class="mt-4 flex justify-center">
+                <div class="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- Command Interface -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <div class="flex gap-4 mb-4">
+                <input
+                    type="text"
+                    id="command-input"
+                    placeholder="Try: 'burn students with cgpa < 4', 'font roboto', or 'podium'"
+                    class="command-input flex-1 px-4 py-3 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <button
+                    onclick="executeCommand()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                    Execute
+                </button>
+                <button
+                    onclick="toggleAddForm()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                    Add Resume
+                </button>
+            </div>
+
+            <!-- Physics Controls -->
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="activateWater()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    Water Mode
+                </button>
+                <button onclick="activateTornado()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    Tornado
+                </button>
+                <button onclick="activatePodium()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-trophy mr-2"></i>Podium
+                </button>
+                <button onclick="thanosSnap()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg text-sm transition-colors font-bold shadow-lg">
+                    <i class="fas fa-bolt mr-2"></i>Thanos Snap
+                </button>
+            </div>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="max-w-4xl mx-auto mb-8 text-center">
+            <button
+                id="reset-button"
+                onclick="resetPositions()"
+                class="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                style="position: relative; z-index: 50;"
+            >
+                <i class="fas fa-redo mr-2"></i>Reset All Effects & Show All Resumes
+            </button>
+        </div>
+
+        <!-- Floating Reset Button (appears during animations) -->
+        <div id="floating-reset-button" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 hidden">
+            <button
+                onclick="resetPositions()"
+                class="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-3xl animate-pulse"
+            >
+                <i class="fas fa-redo mr-2"></i>Reset All & Return to Grid
+            </button>
+        </div>
+
+        <!-- Add Resume Form -->
+        <div id="add-resume-form" class="max-w-4xl mx-auto mb-8 hidden">
+            <div class="resume-card bg-white bg-opacity-10 rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Add New Resume</h2>
+                <form id="resume-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Personal Information -->
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">Full Name *</label>
+                            <input type="text" id="full_name" required
+                                   class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                   placeholder="Enter full name">
+                        </div>
+
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">Profile Image</label>
+                            <div class="space-y-2">
+                                <input type="file" id="photo_file" accept="image/*"
+                                       class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                       onchange="previewImage(this)">
+                                <div id="image-preview" class="hidden">
+                                    <img id="preview-img" class="w-16 h-16 rounded-full object-cover border-2 border-white border-opacity-30" alt="Preview">
+                                    <button type="button" onclick="removeImage()" class="ml-2 text-red-400 hover:text-red-300 text-sm">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">CGPA *</label>
+                            <input type="number" id="cgpa" required min="0" max="10" step="0.1"
+                                   class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                   placeholder="8.5">
+                            <div id="star-preview" class="mt-2 text-yellow-300"></div>
+                        </div>
+
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">GitHub URL</label>
+                            <input type="url" id="github_url"
+                                   class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                   placeholder="https://github.com/username">
+                        </div>
+
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">LinkedIn URL</label>
+                            <input type="url" id="linkedin_url"
+                                   class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                   placeholder="https://linkedin.com/in/username">
+                        </div>
+
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">Email</label>
+                            <input type="email" id="email"
+                                   class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                   placeholder="email@example.com">
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">Bio *</label>
+                        <textarea id="bio" required rows="3"
+                                  class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                  placeholder="Brief description about yourself..."></textarea>
+                    </div>
+
+                    <!-- Skills -->
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">Skills * (comma-separated)</label>
+                        <input type="text" id="skills" required
+                               class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                               placeholder="JavaScript, React, Node.js, Python">
+                        <div id="skills-preview" class="mt-2 flex flex-wrap gap-1"></div>
+                    </div>
+
+                    <!-- Projects -->
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">Projects</label>
+                        <div id="projects-container" class="space-y-3">
+                            <div class="project-entry grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input type="text" placeholder="Project Name"
+                                       class="project-name w-full px-4 py-2 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <input type="text" placeholder="Technologies (comma-separated)"
+                                       class="project-tech w-full px-4 py-2 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addProjectField()"
+                                class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                            Add Another Project
+                        </button>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex gap-4 justify-center pt-4">
+                        <button type="submit"
+                                class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+                            Submit Resume
+                        </button>
+                        <button type="button" onclick="toggleAddForm()"
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resume Grid -->
+        <div id="resume-container" class="max-w-7xl mx-auto">
+            <div id="resume-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Resume cards will be dynamically generated -->
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="fixed bottom-6 right-6 bg-black bg-opacity-30 backdrop-filter backdrop-blur-lg rounded-lg p-4 text-white">
+            <div class="text-sm">
+                <div>Total Resumes: <span id="total-count">0</span></div>
+                <div>Filtered: <span id="filtered-count">0</span></div>
+                <div>Physics: <span id="physics-status">Off</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modular JavaScript files -->
+    <script src="scripts/main.js" defer></script>
+    <script src="scripts/physics.js" defer></script>
+    <script src="scripts/particles.js" defer></script>
+    <script src="scripts/card-effects.js" defer></script>
+    <script src="scripts/ui-interactions.js" defer></script>
+    <script src="scripts/form-handling.js" defer></script>
+    <script src="scripts/data-rendering.js" defer></script>
+    <script src="scripts/command-processor.js" defer></script>
+    <script src="scripts/focus-mode.js" defer></script>
+</body>
+</html>
